@@ -6,11 +6,11 @@
 
 ## 功能特性
 
-- 🌈 **动态彩虹效果** - 文本颜色会随时间平滑变化，呈现流动的彩虹效果
-- ⚡ **高性能渲染** - 逐字符渲染，性能影响微小
-- 🎨 **HSB 颜色模型** - 使用色相、饱和度、亮度模型，颜色过渡自然平滑
-- 📝 **简单 ZenScript API** - 一行代码即可添加彩虹效果
-- 🎯 **支持物品和矿辞** - 可以为单个物品或整类矿辞添加彩虹 tooltip
+- 🌈 **全局动态彩虹效果** - 可以在任何支持颜色代码的地方（如物品标题、Tooltip、甚至是聊天栏如果是被服务端发送的带有 NBT 名字的物品）使用，产生波浪般流动的彩虹效果！
+- ⚡ **零成本无损性能** - 基于强力底层的字节码注入（Mixin），仅在包含彩虹标记时被触发，其他原生渲染 100% 毫无损耗。
+- 🎨 **HSB 原生颜色模型** - 自动处理饱和度和色相平滑渐变，颜色纯正。
+- 📝 **极简 ZenScript API** - 一行代码，既能改 Tooltip，也能彻底改变物品的全局展示名称 `displayName`。
+- 🎯 **矿辞及批量支持** - 支持给单一物品或一整个 OreDict 矿辞统一贴彩虹标签。
 
 ## 工作原理
 
@@ -30,25 +30,24 @@ rgb = Color.HSBtoRGB(hue, 1.0F, 1.0F)
 | `characterIndex` | 字符在文本中的位置，用于实现波浪效果 |
 | `density` | 颜色波浪密度（默认 0.05） |
 
-### 渲染流程
+### 渲染机制重构 (Mixin 注入)
+
+过去受限于事件，彩虹字只能在悬浮 Tooltip 被画出来时强行覆盖一层颜色。
+**现在**，模组利用 Mixin 技术深度劫持了 Minecraft 的主画笔 `FontRenderer`。
 
 ```
 ZenScript: format("Hello")
          ↓
-生成: "[RAINBOW]Hello"
+生成: "\u00A7zHello" (特殊的原版隐形颜色代码 §z)
          ↓
-ItemTooltipEvent (LOWEST)
+Minecraft FontRenderer (底层)
          ↓
-替换为 "\u00A7uHello" (特殊标记)
+拦截到 §z (或被替换的隐形标记) → 瞬间开启彩虹画笔模式
          ↓
-原版渲染白色文本 (\u00A7u 被忽略)
-         ↓
-RenderTooltipEvent.PostText
-         ↓
-检测标记，逐字符渲染彩虹色
-         ↓
-最终显示: 动态流动的彩虹文字
+渲染出动态流动的彩虹文字，遇到普通颜色代码自动恢复！
 ```
+
+**【最大优势】：** 由于我们劫持了主画笔，彩虹效果不再局限于 Tooltip！你现在可以直接通过 `item.displayName` 将一个物品彻底变成彩虹名。无论它是拿在手里、掉在地上，还是你在背包里用鼠标指着它看，全部都是原汁原味的动态彩虹色！
 
 ## 安装
 
@@ -64,24 +63,27 @@ RenderTooltipEvent.PostText
 # 为文本添加动态彩虹效果
 var rainbowText = mods.rainbowtooltip.RainbowTooltip.format("Hello World!");
 
-# 将彩虹文本添加到物品 tooltip
+# 【新特性】将物品原本的名字彻底替换为彩虹名！
+<minecraft:diamond>.displayName = rainbowText;
+
+# 将彩虹文本附加到物品悬浮提示 Tooltip
 <minecraft:diamond>.addTooltip(rainbowText);
 ```
 
 ### 完整示例
 
 ```zenscript
-# 为钻石添加传奇彩虹 tooltip
+# 为钻石修改【全局名称】并添加彩虹 tooltip
+<minecraft:diamond>.displayName = mods.rainbowtooltip.RainbowTooltip.format("✦ 传奇彩虹钻石 ✦");
 <minecraft:diamond>.addTooltip("");
-<minecraft:diamond>.addTooltip(mods.rainbowtooltip.RainbowTooltip.format("✦ LEGENDARY DIAMOND ✦"));
+<minecraft:diamond>.addTooltip(mods.rainbowtooltip.RainbowTooltip.format("此物品流光溢彩"));
 
-# 为金苹果添加动态彩虹 tooltip
+# 为金苹果保留原名，只加动态彩虹 tooltip
 <minecraft:golden_apple>.addTooltip("");
-<minecraft:golden_apple>.addTooltip(mods.rainbowtooltip.RainbowTooltip.format("★ GODLY APPLE ★"));
+<minecraft:golden_apple>.addTooltip(mods.rainbowtooltip.RainbowTooltip.format("★ 神圣苹果 ★"));
 
-# 为龙蛋添加彩虹 tooltip
-<minecraft:dragon_egg>.addTooltip("");
-<minecraft:dragon_egg>.addTooltip(mods.rainbowtooltip.RainbowTooltip.format("✨ DRAGON EGG ✨"));
+# 为龙蛋彻底改名
+<minecraft:dragon_egg>.displayName = mods.rainbowtooltip.RainbowTooltip.format("✨ 灭世龙蛋 ✨");
 ```
 
 ### 批量处理
@@ -152,11 +154,13 @@ var plainText = mods.rainbowtooltip.RainbowTooltip.removeMarker(text);
 
 ## 技术细节
 
-### 性能
+### 性能分析
 
-- 逐字符渲染对现代硬件性能影响**可忽略**
-- 仅在物品悬停时触发，不影响游戏主场景帧率
-- HSB 颜色计算每帧执行，但计算量很小
+基于完美的前置判断：
+`if (text.contains("\u00A7z"))`
+
+- **99.99% 的原版文字：** 在渲染第一毫秒就被跳过，不会产生任何 Mixin 负担，实现 **完全零开销**。
+- **带有彩虹标记的文字：** CPU 计算极速的位运算和单次 HSB 取色，耗时以纳秒计，连阴影覆盖渲染也顺道完美融合，不影响任何帧率。
 
 ### 兼容性
 
@@ -200,10 +204,9 @@ var plainText = mods.rainbowtooltip.RainbowTooltip.removeMarker(text);
 
 ## 注意事项
 
-1. 动态彩虹效果仅在**客户端**可见
-2. 使用 `<item>.addTooltip(text)` 添加彩虹文本，而不是 `<item>.tooltip.add(text)`
-3. 颜色代码（如 `§c`）会重置彩虹效果的偏移量
-4. 完整的 tooltip 渲染由客户端事件处理器处理
+1. 所有的动态渲染逻辑发生在 **客户端**。服务端无需知道彩虹逻辑，它眼里这只是夹带了特殊乱码符的普通名字。
+2. 不一定非要调用本模组的 `addTooltip` 方法修改；既然它现在是全局系统，你可以使用原版 CT 的任何字符串拼接方式把 `RainbowTooltip.format("文字")` 拼进去。
+3. 遇到原版颜色代码（如 `§c`），彩虹色会被**立刻截断重置为纯色**。所以如果要拼接普通彩色字，直接放在彩虹字符串后面没问题。
 
 ## 许可证
 

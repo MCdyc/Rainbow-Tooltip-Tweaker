@@ -30,6 +30,7 @@ public class RainbowTooltip
         instance = this;
     }
 
+
     /**
      * 模组预初始化
      */

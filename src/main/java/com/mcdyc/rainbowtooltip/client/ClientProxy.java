@@ -24,9 +24,7 @@ public class ClientProxy extends CommonProxy {
     public void init(FMLInitializationEvent event) {
         super.init(event);
 
-        // 注册 Tooltip 事件处理器
-        TooltipEventHandler tooltipHandler = new TooltipEventHandler();
-        MinecraftForge.EVENT_BUS.register(tooltipHandler);
+        // TooltipEventHandler removed in favor of MixinFontRenderer
 
         LOGGER.info("Client proxy initialized - Rainbow tooltip events registered");
     }

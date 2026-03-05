@@ -12,7 +12,7 @@ public class RainbowTextUtil {
     /**
      * 动态彩虹标记前缀
      */
-    public static final String RAINBOW_MARKER = "[RAINBOW]";
+    public static final String RAINBOW_MARKER = "\u00A7z";
 
     /**
      * 渐变标记前缀
@@ -121,7 +121,7 @@ public class RainbowTextUtil {
      * @return 是否包含彩虹标记
      */
     public static boolean hasRainbowMarker(String text) {
-        return text != null && text.toUpperCase().contains(RAINBOW_MARKER);
+        return text != null && text.contains(RAINBOW_MARKER);
     }
 
     /**
@@ -142,7 +142,7 @@ public class RainbowTextUtil {
      */
     public static String removeMarkers(String text) {
         if (text == null) return "";
-        return text.replaceAll("(?i)\\[RAINBOW\\]", "")
+        return text.replaceAll("\u00A7z", "")
                    .replaceAll("(?i)\\[GRADIENT\\]", "");
     }
 }

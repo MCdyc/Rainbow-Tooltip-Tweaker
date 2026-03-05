@@ -7,22 +7,25 @@
 var rainbowText = mods.rainbowtooltip.RainbowTooltip.format("Hello World!");
 print(rainbowText);
 
-# 2. 将彩虹文本添加到物品 tooltip
+# 2. 将物品的全局展示名变更为彩虹色（掉在地上、拿在手里都可见）
+<minecraft:diamond>.displayName = rainbowText;
+
+# 3. 将彩虹文本仅仅追加到物品 tooltip 的末尾
 <minecraft:diamond>.addTooltip(rainbowText);
 
-# ===== 物品 Tooltip 示例 =====
+# ===== 物品名称 & Tooltip 示例 =====
 
-# 为钻石添加传奇彩虹 tooltip
+# 为钻石修改传说彩虹名
+<minecraft:diamond>.displayName = mods.rainbowtooltip.RainbowTooltip.format("✦ LEGENDARY DIAMOND ✦");
 <minecraft:diamond>.addTooltip("");
-<minecraft:diamond>.addTooltip(mods.rainbowtooltip.RainbowTooltip.format("✦ LEGENDARY DIAMOND ✦"));
+<minecraft:diamond>.addTooltip(mods.rainbowtooltip.RainbowTooltip.format("It flows with ancient power..."));
 
-# 为金苹果添加动态彩虹 tooltip
+# 为金苹果保留原名，只加动态彩虹 tooltip
 <minecraft:golden_apple>.addTooltip("");
 <minecraft:golden_apple>.addTooltip(mods.rainbowtooltip.RainbowTooltip.format("★ GODLY APPLE ★"));
 
-# 为龙蛋添加彩虹 tooltip
-<minecraft:dragon_egg>.addTooltip("");
-<minecraft:dragon_egg>.addTooltip(mods.rainbowtooltip.RainbowTooltip.format("✨ DRAGON EGG ✨"));
+# 为龙蛋也彻底改名为彩虹名
+<minecraft:dragon_egg>.displayName = mods.rainbowtooltip.RainbowTooltip.format("✨ DRAGON EGG ✨");
 
 # ===== 批量处理 =====
 
