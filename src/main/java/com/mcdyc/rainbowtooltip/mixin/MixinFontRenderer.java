@@ -83,7 +83,7 @@ public abstract class MixinFontRenderer {
      * 当原版遇到合法的颜色代码（如 §c 或 §r）时，它会调用 GlStateManager.color()
      * 此时我们需要关闭彩虹模式，让后续的普通颜色正常生效！
      */
-    @Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;color(FFFF)V"))
+    @Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;setColor(FFFF)V"))
     private void rainbowtooltip$onVanillaColorChange(String text, boolean shadow, CallbackInfo ci) {
         rainbowtooltip$isRainbow = false;
     }
