@@ -11,6 +11,9 @@ import org.apache.logging.log4j.Logger;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
+import java.lang.reflect.Array;
+import java.util.Collection;
+
 /**
  * Rainbow Tooltip - CraftTweaker API
  * 提供 ZenScript 方法来为文本添加动态彩虹标记
@@ -21,6 +24,7 @@ public class RainbowTooltip {
 
     private static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME + ":ZenScript");
     public static final RainbowTooltip INSTANCE = new RainbowTooltip();
+    private static final long DEFAULT_RAINBOW_SPEED = 2000L;
 
     /**
      * 创建动态彩虹文本标记
@@ -38,6 +42,23 @@ public class RainbowTooltip {
             return "";
         }
         return RainbowTextUtil.RAINBOW_MARKER + text;
+    }
+
+    /**
+     * 创建支持自定义速度的动态彩虹文本标记
+     *
+     * @param text 输入文本
+     * @param speedMs 颜色循环周期（毫秒）
+     * @return 带有彩虹标记的文本
+     */
+    @ZenMethod
+    public static String formatWithSpeed(String text, int speedMs) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+
+        long safeSpeed = speedMs > 0 ? speedMs : DEFAULT_RAINBOW_SPEED;
+        return RainbowTextUtil.RAINBOW_MARKER + "{" + safeSpeed + "}" + text;
     }
 
     /**
@@ -74,6 +95,34 @@ public class RainbowTooltip {
     }
 
     /**
+     * 为物品添加支持自定义速度的动态彩虹 tooltip
+     *
+     * @param item 物品堆叠
+     * @param text 要显示的文本
+     * @param speedMs 颜色循环周期（毫秒）
+     */
+    @ZenMethod
+    public static void addTooltip(IItemStack item, String text, int speedMs) {
+        if (item == null || text == null || text.isEmpty()) {
+            return;
+        }
+
+        String rainbowText = formatWithSpeed(text, speedMs);
+
+        try {
+            Class<?> itemStackClass = item.getClass();
+            java.lang.reflect.Method addTooltipMethod = itemStackClass.getMethod("addTooltip", String.class);
+            addTooltipMethod.invoke(item, rainbowText);
+
+            CraftTweakerAPI.logInfo("Added rainbow tooltip with custom speed to " + item.getDisplayName());
+        } catch (Exception e) {
+            LOGGER.error("Failed to add custom speed tooltip via reflection", e);
+            CraftTweakerAPI.logError("Unable to add rainbow tooltip. " +
+                "Please use: <item>.addTooltip(mods.rainbowtooltip.RainbowTooltip.formatWithSpeed(\"text\", speedMs))");
+        }
+    }
+
+    /**
      * 为矿辞条目添加动态彩虹 tooltip
      *
      * @param oreDict 矿字典条目
@@ -95,15 +144,24 @@ public class RainbowTooltip {
         try {
             Class<?> oreDictClass = oreDict.getClass();
             java.lang.reflect.Method getItemsMethod = oreDictClass.getMethod("getItems");
-            Object[] items = (Object[]) getItemsMethod.invoke(oreDict);
+            Object items = getItemsMethod.invoke(oreDict);
 
-            if (items != null) {
-                for (Object itemObj : items) {
+            if (items instanceof Collection<?>) {
+                for (Object itemObj : (Collection<?>) items) {
                     if (itemObj instanceof IItemStack) {
-                        IItemStack item = (IItemStack) itemObj;
-                        addTooltip(item, text);
+                        addTooltip((IItemStack) itemObj, text);
                     }
                 }
+            } else if (items != null && items.getClass().isArray()) {
+                int len = Array.getLength(items);
+                for (int i = 0; i < len; i++) {
+                    Object itemObj = Array.get(items, i);
+                    if (itemObj instanceof IItemStack) {
+                        addTooltip((IItemStack) itemObj, text);
+                    }
+                }
+            } else if (items != null) {
+                LOGGER.warn("Unsupported OreDict getItems() return type: {}", items.getClass().getName());
             }
         } catch (Exception e) {
             LOGGER.error("Failed to add tooltip to OreDict items", e);

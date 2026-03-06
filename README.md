@@ -125,6 +125,12 @@ mods.rainbowtooltip.RainbowTooltip.addTooltip(<minecraft:bedrock>, "✓ INDESTRU
 
 # 矿辞支持
 mods.rainbowtooltip.RainbowTooltip.addTooltip(<ore:ingotIron>, "IRON COLLECTION");
+
+# 自定义彩虹速度（单位：毫秒，越小变色越快）
+var fastName = mods.rainbowtooltip.RainbowTooltip.formatWithSpeed("FAST RAINBOW", 800);
+<minecraft:nether_star>.displayName = fastName;
+
+mods.rainbowtooltip.RainbowTooltip.addTooltip(<minecraft:diamond>, "Speed 1.5s", 1500);
 ```
 
 ### 检查和移除标记
@@ -168,10 +174,10 @@ var plainText = mods.rainbowtooltip.RainbowTooltip.removeMarker(text);
 - Forge 14.23.5.2859
 - CraftTweaker 2 1.12-4.+
 
-### 事件系统
+### 渲染系统
 
-- `ItemTooltipEvent` (LOWEST 优先级) - 检测和替换彩虹标记
-- `RenderTooltipEvent.PostText` - 覆盖渲染，实现动态彩虹效果
+- 基于 `Mixin` 注入 `FontRenderer`，在底层字符渲染路径实时计算彩虹颜色。
+- 支持标记 `§z{text}`（默认 2000ms 周期）和 `§z{speedMs}text`（自定义速度）。
 
 ## 示例脚本
 

@@ -12,8 +12,17 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @Mixin(FontRenderer.class)
 public abstract class MixinFontRenderer {
+
+    @Unique
+    private static final Pattern rainbowtooltip$SPEED_MARKER_PATTERN = Pattern.compile("\\u00A7z\\{(\\d{1,9})}");
+
+    @Unique
+    private static final long rainbowtooltip$DEFAULT_SPEED = 2000L;
 
     @Shadow private float alpha;
 
@@ -26,6 +35,9 @@ public abstract class MixinFontRenderer {
     @Unique
     private int rainbowtooltip$rainbowOffset = 0;
 
+    @Unique
+    private long rainbowtooltip$rainbowSpeed = rainbowtooltip$DEFAULT_SPEED;
+
     /**
      * 将 §z 替换为一个不可见的 Unicode 字符 \uFFFF
      * 这样做可以利用原版的字符解析机制安全地触发我们的状态切换。
@@ -34,6 +46,22 @@ public abstract class MixinFontRenderer {
      */
     @ModifyVariable(method = "renderStringAtPos", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private String rainbowtooltip$modifyText(String text) {
+        rainbowtooltip$rainbowSpeed = rainbowtooltip$DEFAULT_SPEED;
+
+        if (text != null) {
+            Matcher matcher = rainbowtooltip$SPEED_MARKER_PATTERN.matcher(text);
+            if (matcher.find()) {
+                long speed = rainbowtooltip$DEFAULT_SPEED;
+                try {
+                    speed = Long.parseLong(matcher.group(1));
+                } catch (NumberFormatException ignored) {
+                    // 保持默认值
+                }
+                rainbowtooltip$rainbowSpeed = speed > 0L ? speed : rainbowtooltip$DEFAULT_SPEED;
+                return matcher.replaceFirst("\uFFFF");
+            }
+        }
+
         if (text != null && text.contains("\u00A7z")) {
             return text.replace("\u00A7z", "\uFFFF");
         }
@@ -87,7 +115,7 @@ public abstract class MixinFontRenderer {
     @Unique
     private void rainbowtooltip$applyRainbowColor() {
         if (rainbowtooltip$isRainbow) {
-            int rgb = RainbowTextUtil.getDynamicRainbowColor(rainbowtooltip$rainbowOffset++);
+            int rgb = RainbowTextUtil.getDynamicRainbowColor(rainbowtooltip$rainbowOffset++, rainbowtooltip$rainbowSpeed, 0.05F);
 
             float r = ((rgb >> 16) & 0xFF) / 255.0F;
             float g = ((rgb >> 8) & 0xFF) / 255.0F;
