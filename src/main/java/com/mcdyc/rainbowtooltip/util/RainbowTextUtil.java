@@ -1,7 +1,5 @@
 package com.mcdyc.rainbowtooltip.util;
 
-import net.minecraft.client.Minecraft;
-
 import java.awt.Color;
 
 /**
@@ -15,18 +13,13 @@ public class RainbowTextUtil {
     public static final String RAINBOW_MARKER = "\u00A7z";
 
     /**
-     * 渐变标记前缀
-     */
-    public static final String GRADIENT_MARKER = "[GRADIENT]";
-
-    /**
      * 动态彩虹颜色计算 (HSB 模型)
      *
      * @param characterIndex 字符在文本中的位置索引
      * @return 动态计算的 RGB 颜色值
      */
     public static int getDynamicRainbowColor(int characterIndex) {
-        long time = Minecraft.getSystemTime();
+        long time = System.currentTimeMillis();
 
         // HSB 平滑算法：利用时间和字符位置计算色相 (Hue)
         // time % 2000L / 2000.0F - 时间因子，控制整体颜色循环速度
@@ -48,41 +41,12 @@ public class RainbowTextUtil {
         if (speed <= 0L) {
             speed = 2000L;
         }
-        long time = Minecraft.getSystemTime();
+        long time = System.currentTimeMillis();
         float hue = (time % speed) / (float) speed + (characterIndex * density);
         return Color.HSBtoRGB(hue, 1.0F, 1.0F);
     }
 
-    /**
-     * 获取渐变颜色 (静态)
-     *
-     * @param startRGB 起始颜色 RGB 值
-     * @param endRGB 结束颜色 RGB 值
-     * @param currentIndex 当前字符索引
-     * @param totalChars 总字符数
-     * @return 渐变 RGB 颜色值
-     */
-    public static int getGradientColor(int startRGB, int endRGB, int currentIndex, int totalChars) {
-        if (totalChars <= 1) {
-            return startRGB;
-        }
 
-        float ratio = (float) currentIndex / (totalChars - 1);
-
-        int startR = (startRGB >> 16) & 0xFF;
-        int startG = (startRGB >> 8) & 0xFF;
-        int startB = startRGB & 0xFF;
-
-        int endR = (endRGB >> 16) & 0xFF;
-        int endG = (endRGB >> 8) & 0xFF;
-        int endB = endRGB & 0xFF;
-
-        int r = (int) (startR + (endR - startR) * ratio);
-        int g = (int) (startG + (endG - startG) * ratio);
-        int b = (int) (startB + (endB - startB) * ratio);
-
-        return (r << 16) | (g << 8) | b;
-    }
 
     /**
      * 解析颜色字符串为 RGB 值
@@ -128,16 +92,6 @@ public class RainbowTextUtil {
     }
 
     /**
-     * 检查文本是否包含渐变标记
-     *
-     * @param text 输入文本
-     * @return 是否包含渐变标记
-     */
-    public static boolean hasGradientMarker(String text) {
-        return text != null && text.toUpperCase().contains(GRADIENT_MARKER);
-    }
-
-    /**
      * 移除动态彩虹标记
      *
      * @param text 输入文本
@@ -145,7 +99,6 @@ public class RainbowTextUtil {
      */
     public static String removeMarkers(String text) {
         if (text == null) return "";
-        return text.replaceAll("\u00A7z", "")
-                   .replaceAll("(?i)\\[GRADIENT\\]", "");
+        return text.replace("\u00A7z", "");
     }
 }

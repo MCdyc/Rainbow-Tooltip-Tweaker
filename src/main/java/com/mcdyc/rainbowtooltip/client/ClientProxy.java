@@ -2,8 +2,6 @@ package com.mcdyc.rainbowtooltip.client;
 
 import com.mcdyc.rainbowtooltip.Tags;
 import com.mcdyc.rainbowtooltip.common.CommonProxy;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,22 +21,6 @@ public class ClientProxy extends CommonProxy {
     public void init(FMLInitializationEvent event) {
         super.init(event);
 
-        // TooltipEventHandler removed in favor of MixinFontRenderer
-
         LOGGER.info("Client proxy initialized - Rainbow tooltip events registered");
-    }
-
-    /**
-     * 获取 Minecraft 实例
-     */
-    public static Minecraft getMC() {
-        return Minecraft.getMinecraft();
-    }
-
-    /**
-     * 获取字体渲染器
-     */
-    public static FontRenderer getFontRenderer() {
-        return getMC().fontRenderer;
     }
 }

@@ -23,7 +23,6 @@ import stanhebben.zenscript.annotations.ZenMethod;
 public class RainbowTooltip {
 
     private static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME + ":ZenScript");
-    public static final RainbowTooltip INSTANCE = new RainbowTooltip();
     private static final long DEFAULT_RAINBOW_SPEED = 2000L;
 
     /**

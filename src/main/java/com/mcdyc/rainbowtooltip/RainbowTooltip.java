@@ -13,7 +13,8 @@ import org.apache.logging.log4j.Logger;
  * Rainbow Tooltip Tweaker - CraftTweaker 附属模组
  * 允许通过 ZenScript 为物品添加动态彩虹字体
  */
-@Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION)
+@Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION,
+     dependencies = "required-after:crafttweaker;required-after:mixinbooter;")
 public class RainbowTooltip
 {
 
