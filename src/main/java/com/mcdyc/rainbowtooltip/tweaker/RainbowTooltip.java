@@ -4,15 +4,15 @@ import com.mcdyc.rainbowtooltip.Tags;
 import com.mcdyc.rainbowtooltip.util.RainbowTextUtil;
 import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
+import crafttweaker.api.formatting.IFormattedText;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.oredict.IOreDictEntry;
+import crafttweaker.api.tooltip.IngredientTooltips;
+import crafttweaker.mc1120.formatting.FormattedString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
-
-import java.lang.reflect.Array;
-import java.util.Collection;
 
 /**
  * Rainbow Tooltip - CraftTweaker API
@@ -76,22 +76,8 @@ public class RainbowTooltip {
             return;
         }
 
-        String rainbowText = format(text);
-
-        try {
-            // 使用 minetweaker 的 addTooltip 方法
-            // 通过反射调用，因为 CraftTweaker API 1.12.2 版本中 addTooltip 是实例方法
-            Class<?> itemStackClass = item.getClass();
-            java.lang.reflect.Method addTooltipMethod = itemStackClass.getMethod("addTooltip", String.class);
-            addTooltipMethod.invoke(item, rainbowText);
-
-            CraftTweakerAPI.logInfo("Added rainbow tooltip to " + item.getDisplayName());
-        } catch (Exception e) {
-            // 如果 addTooltip 不存在，记录错误
-            LOGGER.error("Failed to add tooltip via reflection", e);
-            CraftTweakerAPI.logError("Unable to add rainbow tooltip. " +
-                "Please use: <item>.addTooltip(mods.rainbowtooltip.RainbowTooltip.format(\"text\"))");
-        }
+        addTooltipInternal(item, format(text));
+        CraftTweakerAPI.logInfo("Added rainbow tooltip to " + item.getDisplayName());
     }
 
     /**
@@ -107,19 +93,8 @@ public class RainbowTooltip {
             return;
         }
 
-        String rainbowText = formatWithSpeed(text, speedMs);
-
-        try {
-            Class<?> itemStackClass = item.getClass();
-            java.lang.reflect.Method addTooltipMethod = itemStackClass.getMethod("addTooltip", String.class);
-            addTooltipMethod.invoke(item, rainbowText);
-
-            CraftTweakerAPI.logInfo("Added rainbow tooltip with custom speed to " + item.getDisplayName());
-        } catch (Exception e) {
-            LOGGER.error("Failed to add custom speed tooltip via reflection", e);
-            CraftTweakerAPI.logError("Unable to add rainbow tooltip. " +
-                "Please use: <item>.addTooltip(mods.rainbowtooltip.RainbowTooltip.formatWithSpeed(\"text\", speedMs))");
-        }
+        addTooltipInternal(item, formatWithSpeed(text, speedMs));
+        CraftTweakerAPI.logInfo("Added rainbow tooltip with custom speed to " + item.getDisplayName());
     }
 
     /**
@@ -138,34 +113,13 @@ public class RainbowTooltip {
         }
 
         String rainbowText = format(text);
+        addTooltipInternal(oreDict, rainbowText);
         CraftTweakerAPI.logInfo("Added rainbow tooltip for OreDict " + oreDict.getName() + ": " + rainbowText);
+    }
 
-        // 注意: OreDict 条目需要遍历包含的物品分别添加 tooltip
-        try {
-            Class<?> oreDictClass = oreDict.getClass();
-            java.lang.reflect.Method getItemsMethod = oreDictClass.getMethod("getItems");
-            Object items = getItemsMethod.invoke(oreDict);
-
-            if (items instanceof Collection<?>) {
-                for (Object itemObj : (Collection<?>) items) {
-                    if (itemObj instanceof IItemStack) {
-                        addTooltip((IItemStack) itemObj, text);
-                    }
-                }
-            } else if (items != null && items.getClass().isArray()) {
-                int len = Array.getLength(items);
-                for (int i = 0; i < len; i++) {
-                    Object itemObj = Array.get(items, i);
-                    if (itemObj instanceof IItemStack) {
-                        addTooltip((IItemStack) itemObj, text);
-                    }
-                }
-            } else if (items != null) {
-                LOGGER.warn("Unsupported OreDict getItems() return type: {}", items.getClass().getName());
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to add tooltip to OreDict items", e);
-        }
+    private static void addTooltipInternal(crafttweaker.api.item.IIngredient ingredient, String tooltipText) {
+        IFormattedText formattedText = new FormattedString(tooltipText);
+        IngredientTooltips.addTooltip(ingredient, formattedText);
     }
 
     /**
