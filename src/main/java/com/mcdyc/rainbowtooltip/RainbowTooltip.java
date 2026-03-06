@@ -48,9 +48,10 @@ public class RainbowTooltip
             // 初始化代理（注册客户端事件）
             if (proxy != null) {
                 proxy.init(event);
+                LOGGER.info("Proxy initialized: {}", proxy.getClass().getName());
+            } else {
+                LOGGER.error("Proxy initialization failed: proxy is null");
             }
-
-            LOGGER.info("Proxy initialized: {}", proxy.getClass().getName());
         } catch (Exception e) {
             LOGGER.error("Failed to initialize mod", e);
         }

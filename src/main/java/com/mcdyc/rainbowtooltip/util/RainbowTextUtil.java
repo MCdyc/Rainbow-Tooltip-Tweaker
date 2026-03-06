@@ -45,6 +45,9 @@ public class RainbowTextUtil {
      * @return 动态计算的 RGB 颜色值
      */
     public static int getDynamicRainbowColor(int characterIndex, long speed, float density) {
+        if (speed <= 0L) {
+            speed = 2000L;
+        }
         long time = Minecraft.getSystemTime();
         float hue = (time % speed) / (float) speed + (characterIndex * density);
         return Color.HSBtoRGB(hue, 1.0F, 1.0F);

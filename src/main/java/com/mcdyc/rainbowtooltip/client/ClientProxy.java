@@ -4,7 +4,6 @@ import com.mcdyc.rainbowtooltip.Tags;
 import com.mcdyc.rainbowtooltip.common.CommonProxy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
